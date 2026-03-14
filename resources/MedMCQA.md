@@ -14,15 +14,22 @@ A large-scale, multi-subject, multiple-choice question answering dataset for med
 | **Avg. token length** | 12.77 tokens per question |
 | **Format** | 4-option multiple choice with explanations |
 | **License** | MIT |
+| **Vocabulary** | 97,694 unique words |
+| **Avg. answer length** | 2.70 tokens |
+| **Avg. explanation length** | 66.22 tokens |
+| **Dataset size** | ~144 MB (JSON) |
 | **Paper** | Pal, Umapathi & Sankarasubbu (2022), PMLR 174:248-260 |
+| **arXiv** | 2203.14371 |
 | **Source exams** | AIIMS PG (1991-present), NEET PG (2001-present) |
 
 ## Source
 
 - **Paper**: https://proceedings.mlr.press/v174/pal22a.html
+- **arXiv**: https://arxiv.org/abs/2203.14371
 - **GitHub**: https://github.com/medmcqa/medmcqa
 - **HuggingFace**: https://huggingface.co/datasets/openlifescienceai/medmcqa
 - **Homepage**: https://medmcqa.github.io/
+- **Leaderboard**: https://paperswithcode.com/dataset/medmcqa
 
 ## Dataset Splits
 
@@ -35,6 +42,16 @@ A large-scale, multi-subject, multiple-choice question answering dataset for med
 - Max question token length: 220 (train), 135 (validation), 88 (test)
 - Similar questions between splits were removed based on similarity scoring
 - Test set ground truth is not publicly released to preserve evaluation integrity
+- AIIMS PG exams (test) have larger vocabulary than NEET (dev), correlating with higher difficulty
+
+### Data Collection
+
+Questions were collected from:
+1. **Official exam repositories** — AIIMS PG (1991+) and NEET PG (2001+)
+2. **Mock tests** — created by medical professionals
+3. **Online test series** — from reputable medical exam prep sources
+
+Quality assurance steps: inconsistent format filtering, external dependency removal, duplicate elimination, cross-split similarity filtering, and expert validation.
 
 ## Medical Subjects (21)
 
@@ -107,6 +124,7 @@ MedMCQA is a standard benchmark in the medical AI community, used alongside MedQ
 
 ### Key Findings
 
+- Human merit candidates on AIIMS/NEET PG score ~90% on average — models remain well below this
 - Questions test 10+ reasoning abilities including recall, comprehension, application, analysis, and clinical judgment
 - Even state-of-the-art LLMs score well below 100%, making MedMCQA a challenging and discriminative benchmark
 - RAG-augmented open-source models can approach proprietary model performance
