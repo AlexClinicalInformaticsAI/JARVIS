@@ -66,6 +66,24 @@ python examples/medical_tutor/datasets.py mimic --data-path /path/to/mimic-iv-no
 
 PDF, DOCX, PPTX, Markdown, plain text, HTML, JSON, JSONL (datasets)
 
+### Token-Efficient Access via jDocMunch MCP
+
+After downloading datasets, use [jDocMunch MCP](https://github.com/jgravelle/jdocmunch-mcp) for section-level retrieval instead of full-file reads. This cuts token usage by 10-50x:
+
+```bash
+# Install and index all datasets into jDocMunch
+pip install jdocmunch-mcp
+python examples/medical_tutor/setup_jdocmunch.py --install
+
+# Generates .mcp.json automatically for Claude Code
+```
+
+| Operation | With jDocMunch | Without (full-file) |
+|-----------|---------------|---------------------|
+| Single section lookup | ~400 tokens | ~12,000 tokens |
+| Browse dataset structure | ~800 tokens | ~40,000 tokens |
+| Full dataset exploration | ~2,000 tokens | ~100,000 tokens |
+
 ## Usage Modes
 
 ### Tutor Mode (default)
@@ -124,4 +142,5 @@ Knowledge graph exploration and concept mapping.
 | `medical_tools.py` | Custom medical tools (concept lookup, clinical reasoning, exam gen, drug interactions) |
 | `tutor.py` | Interactive CLI tutor application |
 | `datasets.py` | Download PubMed OA, MedMCQA, MIMIC-IV, PubMedQA |
+| `setup_jdocmunch.py` | Index datasets into jDocMunch MCP for token-efficient access |
 | `curriculum_sources.md` | Complete reference of UMich M1/M2 + Open RN links |
