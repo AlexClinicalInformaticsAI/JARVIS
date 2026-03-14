@@ -31,19 +31,40 @@ python examples/medical_tutor/ingest_curriculum.py \
 python examples/medical_tutor/tutor.py
 ```
 
-## Curriculum Sources
+## Data Sources
+
+### Research Datasets (auto-download via `datasets.py`)
+
+| Dataset | Records | Purpose | License |
+|---------|---------|---------|---------|
+| **PubMed OA** | Millions of articles | Biomedical knowledge base | CC/OA |
+| **MedMCQA** | 194k MCQs (21 subjects) | AIIMS/NEET PG exam questions | Apache 2.0 |
+| **PubMedQA** | 211k QA pairs | Evidence-based reasoning | MIT |
+| **MIMIC-IV Notes** | 331k discharge summaries | Realistic clinical scenarios | PhysioNet credentialed |
+
+```bash
+# Download all free datasets at once
+python examples/medical_tutor/datasets.py all --index --build-kg
+
+# Or individually
+python examples/medical_tutor/datasets.py pubmed-oa --topic "cardiology" --max-articles 500
+python examples/medical_tutor/datasets.py medmcqa --subjects Pharmacology,Pathology
+python examples/medical_tutor/datasets.py pubmedqa --split pqa_artificial --max-questions 50000
+python examples/medical_tutor/datasets.py mimic --data-path /path/to/mimic-iv-note/
+```
 
 ### Open Educational Resources (Free)
 
 - **Open RN** (CC-BY 4.0) — Nursing fundamentals, pharmacology, skills, mental health
   - NCBI Bookshelf: https://www.ncbi.nlm.nih.gov/books/NBK590025/
   - WisTech Open: https://www.wistechopen.org/open-rn-details
-- **University of Michigan Medical OER**
+- **University of Michigan Medical OER** — M1/M2 full medical school curriculum
   - https://open.umich.edu/find/open-educational-resources/medical-resources
+  - See `curriculum_sources.md` for complete course-by-course links
 
 ### Supported Formats
 
-PDF, DOCX, PPTX, Markdown, plain text, HTML, JSON
+PDF, DOCX, PPTX, Markdown, plain text, HTML, JSON, JSONL (datasets)
 
 ## Usage Modes
 
@@ -87,6 +108,10 @@ Knowledge graph exploration and concept mapping.
 │              OpenJarvis Orchestrator Agent           │
 ├─────────────────────────────────────────────────────┤
 │         Qwen 3.5 (local via Ollama)                 │
+├─────────────────────────────────────────────────────┤
+│                   Data Sources                       │
+│  PubMed OA │ MedMCQA │ PubMedQA │ MIMIC-IV Notes   │
+│  Open RN   │ UMich OER │ Clinical Guidelines        │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -98,3 +123,5 @@ Knowledge graph exploration and concept mapping.
 | `ingest_curriculum.py` | Curriculum ingestion pipeline (RAG + KG) |
 | `medical_tools.py` | Custom medical tools (concept lookup, clinical reasoning, exam gen, drug interactions) |
 | `tutor.py` | Interactive CLI tutor application |
+| `datasets.py` | Download PubMed OA, MedMCQA, MIMIC-IV, PubMedQA |
+| `curriculum_sources.md` | Complete reference of UMich M1/M2 + Open RN links |
