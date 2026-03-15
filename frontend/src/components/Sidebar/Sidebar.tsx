@@ -11,6 +11,7 @@ import {
   Cpu,
   Rocket,
   Bot,
+  GraduationCap,
 } from 'lucide-react';
 import { ConversationList } from './ConversationList';
 import { useAppStore } from '../../lib/store';
@@ -36,6 +37,7 @@ export function Sidebar() {
     { path: '/', icon: MessageSquare, label: 'Chat' },
     { path: '/dashboard', icon: BarChart3, label: 'Dashboard' },
     { path: '/agents', icon: Bot, label: 'Agents' },
+    { path: '/curriculum', icon: GraduationCap, label: 'Curriculum' },
     { path: '/settings', icon: Settings, label: 'Settings' },
     { path: '/get-started', icon: Rocket, label: 'Get Started' },
   ];

@@ -14,6 +14,7 @@ from openjarvis.server.api_routes import include_all_routes
 from openjarvis.server.comparison import comparison_router
 from openjarvis.server.dashboard import dashboard_router
 from openjarvis.server.routes import router
+from openjarvis.curriculum.routes import router as curriculum_router
 
 logger = logging.getLogger(__name__)
 
@@ -138,6 +139,7 @@ def create_app(
     app.include_router(router)
     app.include_router(dashboard_router)
     app.include_router(comparison_router)
+    app.include_router(curriculum_router)
     include_all_routes(app)
 
     # Add security headers middleware
