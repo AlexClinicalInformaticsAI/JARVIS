@@ -1,18 +1,19 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useMemo, useCallback } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import type { CurriculumEvent, StudentProgress, CompetencyLevel } from '../../types/curriculum';
-import { COMPETENCY_COLORS } from '../../types/curriculum';
+import type { CurriculumEvent, StudentProgress, ColorLevel } from '../../types/curriculum';
+import { EXPOSURE_COLORS, COMPETENCY_COLORS } from '../../types/curriculum';
 import { LectureCard } from './LectureCard';
 
 interface Props {
   events: CurriculumEvent[];
   progressMap: Record<string, StudentProgress>;
-  onEventOpen: (event: CurriculumEvent) => void;
+  selectedEventId: string | null;
+  onEventSelect: (event: CurriculumEvent) => void;      // single click → right pane
+  onEventOpen: (event: CurriculumEvent) => void;         // double click → modal
   weekStart: Date;
   onWeekChange: (newStart: Date) => void;
 }
 
-const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 function toISO(d: Date): string {
@@ -25,39 +26,41 @@ function addDays(d: Date, n: number): Date {
   return r;
 }
 
-/** Compute the Sunday that starts the week containing *d*. */
 function weekSunday(d: Date): Date {
   const r = new Date(d);
   r.setDate(r.getDate() - r.getDay());
   return r;
 }
 
-/** Aggregate competency for a day (returns highest level among events). */
-function dayCompetency(
+/** Day-level dual-dot: worst exposure + worst competency among events. */
+function dayLevels(
   dayEvents: CurriculumEvent[],
   progressMap: Record<string, StudentProgress>,
-): CompetencyLevel {
-  let best: CompetencyLevel = 'none';
-  const rank: Record<CompetencyLevel, number> = { none: 0, red: 1, yellow: 2, green: 3 };
+): { exposure: ColorLevel; competency: ColorLevel } {
+  const rank: Record<ColorLevel, number> = { none: 0, red: 1, yellow: 2, green: 3 };
+  let bestExp: ColorLevel = 'none';
+  let bestComp: ColorLevel = 'none';
   for (const ev of dayEvents) {
     const p = progressMap[ev.id];
-    if (p && rank[p.competency_level] > rank[best]) {
-      best = p.competency_level;
+    if (p) {
+      if (rank[p.exposure_level] > rank[bestExp]) bestExp = p.exposure_level;
+      if (rank[p.competency_level] > rank[bestComp]) bestComp = p.competency_level;
     }
   }
-  return best;
+  return { exposure: bestExp, competency: bestComp };
 }
 
 export function CurriculumCalendar({
   events,
   progressMap,
+  selectedEventId,
+  onEventSelect,
   onEventOpen,
   weekStart,
   onWeekChange,
 }: Props) {
   const today = useMemo(() => toISO(new Date()), []);
 
-  // Group events by date
   const byDate = useMemo(() => {
     const map: Record<string, CurriculumEvent[]> = {};
     for (const ev of events) {
@@ -66,7 +69,6 @@ export function CurriculumCalendar({
     return map;
   }, [events]);
 
-  // Build 7 days
   const days = useMemo(() => {
     return Array.from({ length: 7 }, (_, i) => {
       const d = addDays(weekStart, i);
@@ -83,20 +85,10 @@ export function CurriculumCalendar({
     });
   }, [weekStart, byDate, today]);
 
-  const prevWeek = useCallback(
-    () => onWeekChange(addDays(weekStart, -7)),
-    [weekStart, onWeekChange],
-  );
-  const nextWeek = useCallback(
-    () => onWeekChange(addDays(weekStart, 7)),
-    [weekStart, onWeekChange],
-  );
-  const goToday = useCallback(
-    () => onWeekChange(weekSunday(new Date())),
-    [onWeekChange],
-  );
+  const prevWeek = useCallback(() => onWeekChange(addDays(weekStart, -7)), [weekStart, onWeekChange]);
+  const nextWeek = useCallback(() => onWeekChange(addDays(weekStart, 7)), [weekStart, onWeekChange]);
+  const goToday = useCallback(() => onWeekChange(weekSunday(new Date())), [onWeekChange]);
 
-  // Week label
   const weekLabel = useMemo(() => {
     const end = addDays(weekStart, 6);
     const startStr = weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -112,35 +104,21 @@ export function CurriculumCalendar({
         style={{ borderBottom: '1px solid var(--color-border)' }}
       >
         <div className="flex items-center gap-2">
-          <button
-            onClick={prevWeek}
-            className="p-1.5 rounded-lg hover:opacity-70"
-            style={{ color: 'var(--color-text-secondary)' }}
-          >
+          <button onClick={prevWeek} className="p-1.5 rounded-lg hover:opacity-70" style={{ color: 'var(--color-text-secondary)' }}>
             <ChevronLeft size={18} />
           </button>
           <button
             onClick={goToday}
             className="px-3 py-1 rounded-lg text-xs font-medium"
-            style={{
-              background: 'var(--color-accent)',
-              color: 'white',
-            }}
+            style={{ background: 'var(--color-accent)', color: 'white' }}
           >
             Today
           </button>
-          <button
-            onClick={nextWeek}
-            className="p-1.5 rounded-lg hover:opacity-70"
-            style={{ color: 'var(--color-text-secondary)' }}
-          >
+          <button onClick={nextWeek} className="p-1.5 rounded-lg hover:opacity-70" style={{ color: 'var(--color-text-secondary)' }}>
             <ChevronRight size={18} />
           </button>
         </div>
-        <span
-          className="text-sm font-semibold"
-          style={{ color: 'var(--color-text)' }}
-        >
+        <span className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>
           {weekLabel}
         </span>
       </div>
@@ -149,7 +127,7 @@ export function CurriculumCalendar({
       <div className="flex-1 overflow-y-auto">
         <div className="flex h-full" style={{ minHeight: 600 }}>
           {days.map((day) => {
-            const comp = dayCompetency(day.events, progressMap);
+            const { exposure, competency } = dayLevels(day.events, progressMap);
             return (
               <div
                 key={day.iso}
@@ -173,36 +151,33 @@ export function CurriculumCalendar({
                 >
                   <div
                     className="text-xs font-medium"
-                    style={{
-                      color: day.isToday ? 'var(--color-accent)' : 'var(--color-text-tertiary)',
-                    }}
+                    style={{ color: day.isToday ? 'var(--color-accent)' : 'var(--color-text-tertiary)' }}
                   >
                     {DAY_SHORT[day.dayOfWeek]}
                   </div>
                   <div
                     className="text-lg font-bold"
-                    style={{
-                      color: day.isToday ? 'var(--color-accent)' : 'var(--color-text)',
-                    }}
+                    style={{ color: day.isToday ? 'var(--color-accent)' : 'var(--color-text)' }}
                   >
                     {day.dayNum}
                   </div>
-                  <div
-                    className="text-xs"
-                    style={{ color: 'var(--color-text-tertiary)' }}
-                  >
+                  <div className="text-xs" style={{ color: 'var(--color-text-tertiary)' }}>
                     {day.month}
                   </div>
-                  {/* Day-level competency dot */}
+                  {/* Day-level dual dots */}
                   {day.events.length > 0 && (
-                    <span
-                      className="inline-block rounded-full mt-1"
-                      style={{
-                        width: 6,
-                        height: 6,
-                        background: COMPETENCY_COLORS[comp],
-                      }}
-                    />
+                    <div className="flex justify-center gap-0.5 mt-1">
+                      <span
+                        className="rounded-full"
+                        style={{ width: 6, height: 6, background: EXPOSURE_COLORS[exposure] }}
+                        title={`Exposure: ${exposure}`}
+                      />
+                      <span
+                        className="rounded-full"
+                        style={{ width: 6, height: 6, background: COMPETENCY_COLORS[competency] }}
+                        title={`Competency: ${competency}`}
+                      />
+                    </div>
                   )}
                 </div>
 
@@ -221,6 +196,8 @@ export function CurriculumCalendar({
                         key={ev.id}
                         event={ev}
                         progress={progressMap[ev.id]}
+                        selected={ev.id === selectedEventId}
+                        onClick={onEventSelect}
                         onDoubleClick={onEventOpen}
                       />
                     ))
